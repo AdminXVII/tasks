@@ -1,0 +1,101 @@
+$fg:    #1e9e34;
+$text:  $fg;
+$bkg:   darken($fg,35%);
+$dev:   30deg;
+$fail:  adjust-hue( $fg, -120deg );
+
+body{
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5em;
+    color: $text;
+    background: $bkg;
+    padding: 10px 5%;
+    text-align: left;
+}
+
+h1{
+    font-family: 'Lato', sans-serif;
+    font-size: 3em;
+    text-align: center;
+    color: $fg;
+}
+
+h2{
+    font-family: 'Lato', sans-serif;
+    font-size: 2em;
+    color: $fg;
+}
+
+input{
+	font-family: 'Lato', sans-serif;
+    font-size: 2em;
+    width: 60%;
+    margin: 0 20%;
+    background: none;
+    border: none;
+    border-bottom: 2px solid $fail;
+    color: $fail;
+    outline: none;
+    transition: all .1s ease-in-out;
+
+    &:valid{
+        border-bottom-color: $fg;
+        color: $fg
+    }
+
+    &:focus{
+        border-bottom-width: 5px;
+    }
+}
+
+label{
+    font-family: 'Lato', sans-serif;
+    font-size: 1em;
+    margin: 0 20%;
+}
+
+label#error{
+    color: $fail;
+}
+
+hr{
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid darken($fg, 20%);
+    margin: 1em 0;
+}
+
+.failed{
+    pre{
+        border-left: 2px solid $fail;
+        padding: 2%;
+        background: rgba(255,0,0,0.1);
+        color: $fail;
+    }
+
+    h2{
+        color: $fail;
+    }
+
+    a {
+        cursor:pointer;
+        color: saturate($fail, 50%);
+        text-shadow: 2px 1px 0px darken(saturate($fail, 50%), 20%);
+    }
+
+    a:hover{
+        color: darken(saturate($fail, 50%), 20%);
+    }
+}
+
+
+@media screen and (max-width: 640px) {
+    body {
+        font-size: 1em;
+    }
+}
