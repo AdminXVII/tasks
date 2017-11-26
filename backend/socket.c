@@ -8,6 +8,7 @@
 #include "backend.h"
 
 task tasks[MAX_TASKS];
+task failed[MAX_TASKS];
 short nb_tasks = 0;
 
 void remove_task(short idx){
@@ -16,9 +17,10 @@ void remove_task(short idx){
         *ptr = *(ptr+1);
         ptr++;
     }
+    nb_tasks--;
 }
 
-int open_unix(int port){
+int openIPC(){
     int listenfd, optval=1;
     struct sockaddr_un server;
 
@@ -42,27 +44,41 @@ int open_unix(int port){
     /* Make it a listening socket ready to accept connection requests */
     if (listen(listenfd, MAX_TASKS) < 0)
         return -1;
+    if (listenfd < 0) {
+        perror("Cant open port for internal communication");
+        exit(0);
+    }
     return listenfd;
 }
 
 void parse_json(int fd){
-    buf_write(fd, "[{\"", 3);
-    buf_write(fd, tasks[0].name, strlen(tasks[0].name));
-    buf_write(fd, "\":\"", 3);
-    buf_write(fd, tasks[0].msg, strlen(tasks[0].msg));
-    buf_write(fd, "\"}]", 3);
-
-}
-
-int spawn_IPC(short port, short nb_child){
-    int fd;
-
-    fd = open_unix(port);
-    if (fd < 0) {
-        perror("Cant open port for internal communication");
-        exit(fd);
+    buf_write(fd, "[[", 2);
+    short i = 0;
+    for (; i < nb_tasks; i++){
+        if (!tasks[i].running)
+            continue;
+        if (i > 0)
+            buf_write(fd, ",", 1);
+        buf_write(fd, "[\"", 2);
+        buf_write(fd, tasks[i].name, strlen(tasks[i].name));
+        buf_write(fd, "\",\"", 3);
+        buf_write(fd, tasks[i].msg, strlen(tasks[i].msg));
+        buf_write(fd, "\"]", 2);
     }
-    return fd;
+    buf_write(fd, "],[", 3);
+    for (i--; i >= 0; i--){
+        if (tasks[i].running)
+            continue;
+        if (i+1 < nb_tasks)
+            buf_write(fd, ",", 1);
+        buf_write(fd, "[\"", 2);
+        buf_write(fd, tasks[i].name, strlen(tasks[i].name));
+        buf_write(fd, "\",\"", 3);
+        buf_write(fd, tasks[i].msg, strlen(tasks[i].msg));
+        buf_write(fd, "\"]", 2);
+        remove_task(i);
+    }
+    buf_write(fd, "]]", 2);
 }
 
 void IPC(int listenfd) {
@@ -79,21 +95,18 @@ void IPC(int listenfd) {
 void *update(void *tsk_ptr){
     short len;
     task *tsk = (task *)tsk_ptr;
-    int id = nb_tasks;
     nb_tasks++;
 
     if((len = recv(tsk->fd, &(tsk->name), sizeof(tsk->name), 0)) <= 0){ 
         perror("Closing child");
         exit(0);
     }
-    tsk->name[len-1] = '\0'; // Remove end-of-message
+    tsk->name[len-1] = '\0'; // Add end-of-string
     tsk->running = true;
     while(1){
         len = recv(tsk->fd, &(tsk->msg), sizeof(tsk->msg), 0);
         if(len == 0){
             tsk->running = false;
-            nb_tasks--;
-            remove_task(id);
             return 0;
         } else if(len < 0){ 
             perror("Closing child");

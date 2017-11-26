@@ -1,2 +1,4 @@
+.sass-cache
 tasks-tracker
 *.swp
+*.css.map

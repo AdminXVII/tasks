@@ -19,7 +19,7 @@ int main(int argc, char** argv){
     // won't kill the whole process.
     signal(SIGPIPE, SIG_IGN);
 
-    int fd = spawn_IPC(256, 20);
+    int fd = openIPC();
     spawn_server(port, nb_child);
     while(1)
         IPC(fd);

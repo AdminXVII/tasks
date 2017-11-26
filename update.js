@@ -11,9 +11,10 @@ urlNode.pattern = '((https:\\/\\/)?' +                           // secure?
 '(\\/[\\w%.~+-]*)*' +                                   // filepath
 '(\\?[\\w;&%.~+=-]*)?' +                                // query string
 '(#[\\w-]*)?';                              // fragment locator
-urlNode.value = (localStorage.getItem("url") || "chezxavier.qc.to/ai/help.json");
+urlNode.value = (localStorage.getItem("url") || "chezxavier.qc.to/tasks/help.json");
 setUrl(urlNode.value);
 urlNode.onkeydown = function(evt){
+    document.getElementById("url").className = "";
     if(evt.keyCode == 13){
         setUrl(urlNode.value);
     }
@@ -26,11 +27,7 @@ function setUrl(newUrl){
         url = (match[1]? match[1] : "http://") + (match[2]? match[2] : "localhost") + (match[3]? match[3] : "") + (match[4]? match[4] : "");
         fetchable = true;
         // Save the data in localStorage
-        localStorage.setItem("url", newUrl);
-        document.getElementById("error").innerHTML = "";
         fetch();
-    } else {
-        document.getElementById("error").innerHTML = "Please enter a valid url";
     }
 }
 
@@ -51,19 +48,18 @@ function update(){
     if (this.readyState == 4 && this.status == 200) {
         var response = JSON.parse(this.responseText);
         resetRunning();
-        for (var task in response){
-            var hr = document.getElementsByTagName("hr")[0];
-            if(response[task].running){
-                hr.parentNode.insertBefore(newRun(response[task]["title"],response[task]["msg"]), hr);
-            } else {
-                hr.parentNode.insertBefore(newFail(response[task]["title"],response[task]["msg"]), hr.nextSibling);
-            }
-        }
-        document.getElementById("error").innerHTML = "";
-    } else if (this.readyState == 4 && (this.status == 404 || this.status == 0)) {
+        response[1].forEach(function(task, idx, array){
+            document.body.appendChild(newFail(task[0],task[1]));
+        });
+        response[0].forEach(function(task, idx, array){
+            document.body.appendChild(newRun(task[0],task[1]));
+        });
+        document.getElementById("url").className = "";
+        localStorage.setItem("url", urlNode.value);
+    } else if (this.readyState == 4) {
         fetchable = false;
         resetRunning();
-        document.getElementById("error").innerHTML = "File not found";
+        document.getElementById("url").className = "notfound";
     }
 }
 
@@ -72,14 +68,14 @@ function update(){
 function newRun(title, msg){
     var newRun = document.createElement('div');
     newRun.className = "running";
-    newRun.innerHTML = "<h2>"+title+"</h2><pre>"+msg+"</pre>";
+    newRun.innerHTML = "<h1>"+title+"</h1><pre>"+msg+"</pre>";
     return newRun;
 }
 
 function newFail(title, msg){
     var newFail = document.createElement('div');
     newFail.className = "failed";
-    newFail.innerHTML = "<h2>"+title+" <a onclick='removeElement(this.parentNode.parentNode);'>&#10006;</a></h2><pre>"+msg+"</pre>";
+    newFail.innerHTML = "<h1><button onclick='removeElement(this.parentNode.parentNode);'>&times;</button>"+title+"</h1><pre>"+msg+"</pre>";
     return newFail;
 }
 
@@ -95,4 +91,3 @@ function resetRunning(){
 function removeElement(el){
     el.parentNode.removeChild(el);
 }
-

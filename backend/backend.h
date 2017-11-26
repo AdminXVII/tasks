@@ -28,9 +28,8 @@ typedef struct{
 int main(int argc, char** argv);
 
 //Local side (socket.c)
-int open_unix(int port);
+int openIPC();
 void parse_json(int fd);
-int spawn_IPC(short port, short nb_child);
 void IPC(int listenfd);
 void *update(void *tsk_ptr);
 
