@@ -73,7 +73,7 @@ header{
             }
 
             &.notfound{
-                background: url(err.svg) no-repeat 250px -8px;
+                background: url(err404.svg) no-repeat 250px -8px;
                 border-bottom-color: $fail;
                 color: $fail;
             }
