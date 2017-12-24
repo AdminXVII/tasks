@@ -7,18 +7,8 @@
 #include <pthread.h>
 #include "backend.h"
 
-task tasks[MAX_TASKS];
-task failed[MAX_TASKS];
-short nb_tasks = 0;
-
-void remove_task(short idx){
-    task *ptr = tasks + idx;
-    for (short i = idx + 1; i < nb_tasks; i++){
-        *ptr = *(ptr+1);
-        ptr++;
-    }
-    nb_tasks--;
-}
+bool uids[256]; // 256 defines the max concurrent tasks. The max should never be attained, which lets sufficient space to perform useful round-robin
+unsigned char last_uid = -1; // to implement round-robin UID attribution, which is faster than to perform a search
 
 int openIPC(){
     int listenfd, optval=1;
@@ -36,7 +26,7 @@ int openIPC(){
     /* Listenfd will be an endpoint for all requests to port
        on any IP address for this host */
     server.sun_family = AF_LOCAL;  /* local is declared before socket() ^ */
-    strcpy(server.sun_path, "/var/run/task-tracker/backend.sock");
+    strcpy(server.sun_path, "/tmp/task-tracker.sock");
     unlink(server.sun_path);
     if (bind(listenfd, (SA *)&server, strlen(server.sun_path) + sizeof(server.sun_family)) < 0)
         return -1;
@@ -44,75 +34,61 @@ int openIPC(){
     /* Make it a listening socket ready to accept connection requests */
     if (listen(listenfd, MAX_TASKS) < 0)
         return -1;
-    if (listenfd < 0) {
-        perror("Cant open port for internal communication");
-        exit(0);
-    }
+    if (listenfd < 0)
+        return -1;
     return listenfd;
-}
-
-void parse_json(int fd){
-    buf_write(fd, "[[", 2);
-    short i = 0;
-    for (; i < nb_tasks; i++){
-        if (!tasks[i].running)
-            continue;
-        if (i > 0)
-            buf_write(fd, ",", 1);
-        buf_write(fd, "[\"", 2);
-        buf_write(fd, tasks[i].name, strlen(tasks[i].name));
-        buf_write(fd, "\",\"", 3);
-        buf_write(fd, tasks[i].msg, strlen(tasks[i].msg));
-        buf_write(fd, "\"]", 2);
-    }
-    buf_write(fd, "],[", 3);
-    for (i--; i >= 0; i--){
-        if (tasks[i].running)
-            continue;
-        if (i+1 < nb_tasks)
-            buf_write(fd, ",", 1);
-        buf_write(fd, "[\"", 2);
-        buf_write(fd, tasks[i].name, strlen(tasks[i].name));
-        buf_write(fd, "\",\"", 3);
-        buf_write(fd, tasks[i].msg, strlen(tasks[i].msg));
-        buf_write(fd, "\"]", 2);
-        remove_task(i);
-    }
-    buf_write(fd, "]]", 2);
 }
 
 void IPC(int listenfd) {
     struct sockaddr_un client;
     socklen_t len = sizeof client;
     int connfd;
+    pthread_t thread;
 
     connfd = accept(listenfd, (SA *)&client, &len);
-    task *tsk = tasks+nb_tasks;
-    tsk->fd = connfd;
-    pthread_create(&(tsk->thread), NULL, update, (void *)tsk);
-}
-
-void *update(void *tsk_ptr){
-    short len;
-    task *tsk = (task *)tsk_ptr;
-    nb_tasks++;
-
-    if((len = recv(tsk->fd, &(tsk->name), sizeof(tsk->name), 0)) <= 0){ 
-        perror("Closing child");
-        exit(0);
-    }
-    tsk->name[len-1] = '\0'; // Add end-of-string
-    tsk->running = true;
-    while(1){
-        len = recv(tsk->fd, &(tsk->msg), sizeof(tsk->msg), 0);
-        if(len == 0){
-            tsk->running = false;
-            return 0;
-        } else if(len < 0){ 
-            perror("Closing child");
+    if(connfd < 0){
+            perror("Error binding to socket");
             exit(0);
-        }
-        tsk->msg[len-1] = '\0';
     }
+    pthread_create(&thread, NULL, update, (void *)&connfd);
 }
 
+void *update(void *_fd){
+    short len;
+    int fd = *(int *)_fd;
+    printf("%d",fd);
+    char msg[MAX_MSG_LEN];
+    unsigned char uid;
+    
+    // Round-robin attribution
+    do
+        last_uid++;
+    while(uids[last_uid] == true); // next until empty uid
+    uid = last_uid;
+    uids[uid] = true;
+
+    len = recv(fd, msg, sizeof(msg), 0);
+    if(len <= 0){
+        uids[uid] = false;
+        perror("Error with IPC communication");
+        return 0;
+    }
+    msg[len-1] = '\0';
+    sendUpdate(uid, msg, NAME);
+
+    while(1){
+        len = recv(fd, msg, sizeof(msg), 0);
+        if(len == 0){
+            sendUpdate(uid, msg, END);
+            uids[uid] = false;
+            return 0;
+        } else if(len < 0){
+            sendUpdate(uid, msg, END);
+            uids[uid] = false;
+            perror("Closing IPC child");
+            return 0;
+        }
+        msg[len-1] = '\0';
+        sendUpdate(uid, msg, MSG);
+    }
+}

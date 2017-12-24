@@ -2,3 +2,5 @@
 tasks-tracker
 *.swp
 *.css.map
+backend/tasks-tracker
+backend/setup.sh

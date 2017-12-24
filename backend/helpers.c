@@ -20,17 +20,3 @@ ssize_t buf_write(int fd, char *buf, size_t n){
     }
     return n;
 }
-
-char* format_size(unsigned long size){
-    char *out = (char*)malloc(13 * sizeof(char));
-    if(size < 1024){
-        sprintf(out, "%lu", size);
-    } else if (size < 1024 * 1024){
-        sprintf(out, "%.1fK", (double)size / 1024);
-    } else if (size < 1024 * 1024 * 1024){
-        sprintf(out, "%.1fM", (double)size / 1024 / 1024);
-    } else {
-        sprintf(out, "%.1fG", (double)size / 1024 / 1024 / 1024);
-    }
-    return out;
-}

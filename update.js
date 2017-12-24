@@ -2,92 +2,90 @@
 
 var url;
 var urlNode = document.getElementById("url");
-var fetchable = true;
+var source;
 
-urlNode.pattern = '((https:\\/\\/)?' +                           // secure?
-        '(([a-zA-Z\\d][a-zA-Z\\d-]*[a-zA-Z\\d]\\.)+[a-z]{2,}|' +    // domain name
-            '(\\d{1,3}\\.){3}\\d{1,3}))?' +               // or IPv4
-'(:\\d{1,4})?' +                                  // port
-'(\\/[\\w%.~+-]*)*' +                                   // filepath
-'(\\?[\\w;&%.~+=-]*)?' +                                // query string
-'(#[\\w-]*)?';                              // fragment locator
-urlNode.value = (localStorage.getItem("url") || "chezxavier.qc.to/tasks/help.json");
+urlNode.value = (localStorage.getItem("url") || "help");
 setUrl(urlNode.value);
 urlNode.onkeydown = function(evt){
     document.getElementById("url").className = "";
     if(evt.keyCode == 13){
         setUrl(urlNode.value);
     }
-}
+};
 
 function setUrl(newUrl){
     var regex = /^(?:(https:\/\/)?((?:(?:[a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}|(?:\d{1,3}\.){3}\d{1,3})))?(:\d{1,4})?((?:\/[\w%.~+-]*)*(?:\?[\w;&%.~+=-]*)?(?:#[\w-]*)?)$/i;
-    var match = regex.exec(newUrl);
-    if (match != null){
-        url = (match[1]? match[1] : "http://") + (match[2]? match[2] : "localhost") + (match[3]? match[3] : "") + (match[4]? match[4] : "");
-        fetchable = true;
-        // Save the data in localStorage
-        fetch();
+    var match = newUrl.match(regex);
+    if (match !== null){
+        urlNode.setCustomValidity("");
+        url = (match[1]? match[1] : "http://") + (match[2]? match[2] : "localhost") + (match[3]? match[3] : ":9000") + (match[4]? match[4] : "");
+        if (source) source.close();
+        source = new EventSource(url);
+        
+        source.onmessage = message;
+        source.onerror = function(e) {
+          alert("EventSource failed.");
+        };
+        localStorage.setItem("url", urlNode.value);
+    } else if (newUrl == "help"){
+        // show help
+    } else {
+        urlNode.setCustomValidity("Invalid URL.");
     }
 }
 
 /* auto-update */
 
-setInterval(fetch,1500);
-fetch();
 
-function fetch(){
-    if(!fetchable) return;
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = update;
-    xhttp.open("GET", url, true);
-    xhttp.send();
+function message(e) {
+    var response = JSON.parse(e.data);
+    var id = response[0],
+        type = response[1];
+    
+    if(type === 0){
+        rename(id, response[2]);
+    } else if (type == 1){
+        update(id, response[2]);
+    } else {
+        end(id);
+    }
 }
 
-function update(){
-    if (this.readyState == 4 && this.status == 200) {
-        var response = JSON.parse(this.responseText);
-        resetRunning();
-        response[1].forEach(function(task, idx, array){
-            document.body.appendChild(newFail(task[0],task[1]));
-        });
-        response[0].forEach(function(task, idx, array){
-            document.body.appendChild(newRun(task[0],task[1]));
-        });
-        document.getElementById("url").className = "";
-        localStorage.setItem("url", urlNode.value);
-    } else if (this.readyState == 4) {
-        fetchable = false;
-        resetRunning();
-        document.getElementById("url").className = "notfound";
+
+function rename(id, title){
+    var el = document.getElementById(id);
+    if (el === null){
+        newRun(id,title);
+    } else {
+        el.getElementsByTagName('h1')[0].innerHTML = title;
     }
+}
+
+function update(id, message){
+    el = document.getElementById(id).getElementsByTagName('pre')[0].innerHTML = message;
+}
+
+function end(id){
+    el = document.getElementById(id);
+    if (el === null)
+        return;
+    el.className = "failed";
+    var button = document.createElement("button");
+    button.onclick = function(){removeElement(this.parentNode.parentNode)};
+    button.innerHTML = "&times";
+    el.getElementsByTagName('h1')[0].prepend(button);
 }
 
 /* Task display */
-
-function newRun(title, msg){
+function newRun(id, title){
     var newRun = document.createElement('div');
+    newRun.id = id;
     newRun.className = "running";
-    newRun.innerHTML = "<h1>"+title+"</h1><pre>"+msg+"</pre>";
-    return newRun;
-}
-
-function newFail(title, msg){
-    var newFail = document.createElement('div');
-    newFail.className = "failed";
-    newFail.innerHTML = "<h1><button onclick='removeElement(this.parentNode.parentNode);'>&times;</button>"+title+"</h1><pre>"+msg+"</pre>";
-    return newFail;
+    newRun.innerHTML = "<h1>"+title+"</h1><pre></pre>";
+    document.body.appendChild(newRun);
 }
 
 /* Helpers */
-
-function resetRunning(){
-    var elements = document.getElementsByClassName("running");
-    while(elements.length > 0){
-        removeElement(elements[0]);
-    }
-}
-
 function removeElement(el){
     el.parentNode.removeChild(el);
 }

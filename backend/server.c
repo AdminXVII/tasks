@@ -11,6 +11,11 @@
 #include <pthread.h>
 #include "backend.h"
 
+int *conns_fd;
+short nb_conn = 0;
+
+char buf[MAX_MSG_LEN+19]; //data: [256,"..."]\n\n\0
+
 int open_net(int port){
     int listenfd, optval=1;
     struct sockaddr_in serveraddr;
@@ -34,7 +39,7 @@ int open_net(int port){
        on any IP address for this host */
     memset(&serveraddr, 0, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
-    serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     serveraddr.sin_port = htons((unsigned short)port);
     if (bind(listenfd, (SA *)&serveraddr, sizeof(serveraddr)) < 0)
         return -1;
@@ -51,18 +56,21 @@ void spawn_server(short port, short nb_child){
         perror("Can't open port for internet access");
         exit(listenfd);
     }
+    
+    conns_fd = calloc(nb_child, sizeof(int));
 
     pthread_t childs[nb_child];
     for(int i = 0; i < nb_child; i++) {
-        pthread_create(&(childs[i]), NULL, receive, (void *)&listenfd);
+        pthread_create((childs+i), NULL, receive, (void *)&listenfd);
     }
 }
 
 RequestType req_type(int fd){
-    char method[4]; // four first char
+    char method[5]; // four first char
 
     read(fd,method,4);
-    if (strcmp(method,"GET ") == 0){ 
+    method[4] = '\0'; // Null-terminator
+    if (strcmp(method,"GET ") == 0){
         return GET;
     } else if (strcmp(method,"HEAD") == 0){
         return HEAD;
@@ -75,12 +83,20 @@ void headers(int fd){
             "Accept-Ranges: none\r\n"
             "Cache-Control: no-cache\r\n"
             "Access-Control-Allow-Origin: *\r\n"
-            "Content-type: application/json;\r\n\r\n", 130);
+            "Content-type: text/event-stream;\r\n\r\n", 131);
 }
 
 void invalid(int fd){
-    printf("Invalid request\n");
     buf_write(fd, "HTTP/1.1 400 Bad Request\r\n", 27);
+}
+
+void sendUpdate(short uid, char *msg, Type type){
+    sprintf(buf, "data: [%d,%d,\"%s\"]\n\n", uid, type, msg);
+    for (short i = 0; i < nb_conn; i++){
+        buf_write(conns_fd[i], buf, strlen(buf));
+    }
+    // if(type==NAME)
+    // store for later use
 }
 
 void *receive(void *listenfd){
@@ -91,14 +107,18 @@ void *receive(void *listenfd){
         fd = accept(*(int *)listenfd, NULL, 0);
         type = req_type(fd);
 
-        if(type == GET || type == HEAD){
+        if(type == HEAD){
             headers(fd);
+            shutdown(fd,SHUT_RDWR);
+        } else if(type == GET){
+            headers(fd);
+            // send_names();
+            conns_fd[nb_conn] = fd;
+            nb_conn++;
         } else {
             invalid(fd);
+            shutdown(fd,SHUT_RDWR);
         }
-
-        if(type == GET)
-            parse_json(fd);
-        shutdown(fd, SHUT_WR);
+        
     }
 }
