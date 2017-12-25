@@ -14,17 +14,18 @@ urlNode.onkeydown = function(evt){
 };
 
 function setUrl(newUrl){
-    var regex = /^(?:(https:\/\/)?((?:(?:[a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}|(?:\d{1,3}\.){3}\d{1,3})))?(:\d{1,4})?((?:\/[\w%.~+-]*)*(?:\?[\w;&%.~+=-]*)?(?:#[\w-]*)?)$/i;
+    var regex = /^(?:((?:(?:[a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}|(?:\d{1,3}\.){3}\d{1,3})))?(:\d{1,4})?((?:\/[\w%.~+-]*)*(?:\?[\w;&%.~+=-]*)?(?:#[\w-]*)?)$/i;
     var match = newUrl.match(regex);
     if (match !== null){
         urlNode.setCustomValidity("");
-        url = (match[1]? match[1] : "http://") + (match[2]? match[2] : "localhost") + (match[3]? match[3] : ":9000") + (match[4]? match[4] : "");
+        url = "https://" + (match[1]? match[1] : "localhost") + (match[2]? match[2] : ":9000") + (match[3]? match[3] : "");
         if (source) source.close();
         source = new EventSource(url);
         
         source.onmessage = message;
         source.onerror = function(e) {
-          alert("EventSource failed.");
+          console.log(e);
+          source.onerror = null;
         };
         localStorage.setItem("url", urlNode.value);
     } else if (newUrl == "help"){
