@@ -56,7 +56,6 @@ void IPC(int listenfd) {
 void *update(void *_fd){
     short len;
     int fd = *(int *)_fd;
-    printf("%d",fd);
     char msg[MAX_MSG_LEN];
     unsigned char uid;
     
@@ -68,7 +67,7 @@ void *update(void *_fd){
     uids[uid] = true;
 
     len = recv(fd, msg, sizeof(msg), 0);
-    if(len <= 0){
+    if(len < 0){
         uids[uid] = false;
         perror("Error with IPC communication");
         return 0;
@@ -79,7 +78,7 @@ void *update(void *_fd){
     while(1){
         len = recv(fd, msg, sizeof(msg), 0);
         if(len == 0){
-            sendUpdate(uid, msg, END);
+            sendUpdate(uid, NULL, END);
             uids[uid] = false;
             return 0;
         } else if(len < 0){
