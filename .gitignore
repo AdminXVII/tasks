@@ -4,3 +4,9 @@ tasks-tracker
 *.css.map
 backend/tasks-tracker
 backend/setup.sh
+*.o
+backend/src/.deps/*
+backend/build/autom4te.cache/*
+backend/build/.deps/*
+backend/build/*
+!backend/build/Makefile.am
