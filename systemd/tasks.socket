@@ -1,0 +1,13 @@
+[Unit]
+Description=Tasks Socket
+PartOf=tasks.service
+
+[Socket]
+ListenSequentialPacket=%t/tasks.sock
+ListenStream=9000
+SocketMode=0600
+DirectoryMode=0700
+ReusePort=true
+
+[Install]
+WantedBy=sockets.target

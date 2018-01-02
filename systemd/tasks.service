@@ -1,0 +1,13 @@
+[Unit]
+Description=A multiplexing server to send real-time info about long-running tasks
+After=syslog.target network.target tasks.socket
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/tasks
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Also=graphical.target
