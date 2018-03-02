@@ -10,3 +10,4 @@ backend/build/autom4te.cache/*
 backend/build/.deps/*
 backend/build/*
 !backend/build/Makefile.am
+node_modules/

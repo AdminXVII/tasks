@@ -3,7 +3,6 @@ var sass = require('gulp-sass');
 var svgSymbols = require('gulp-svg-symbols');
 var htmlmin = require('gulp-htmlmin');
 var svgo = require('gulp-svgo');
-var htmlreplace = require('gulp-html-replace');
 var gls = require('gulp-live-server');
 var purge = require('gulp-css-purge');
 var uncache = require('gulp-uncache');
