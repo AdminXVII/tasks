@@ -1,0 +1,29 @@
+{
+  "name": "tasks",
+  "version": "0.0.4",
+  "description": "Keep track of long running tasks (this is the front-end)",
+  "main": "Gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AdminXVII/tasks.git"
+  },
+  "author": "AdminXVII <dev.xlheureux@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AdminXVII/tasks/issues"
+  },
+  "homepage": "https://github.com/AdminXVII/tasks#readme",
+  "devDependencies": {
+    "gulp-css-purge": "^3.0.3",
+    "gulp-express": "^0.3.5",
+    "gulp-htmlmin": "^4.0.0",
+    "gulp-live-server": "0.0.31",
+    "gulp-sass": "^3.1.0",
+    "gulp-svg-symbols": "^3.1.0",
+    "gulp-svgo": "^1.4.0",
+    "gulp-uncache": "^0.4.0-beta1"
+  }
+}

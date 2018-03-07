@@ -1,12 +1,3 @@
 .sass-cache
-tasks-tracker
-*.swp
 *.css.map
-backend/tasks-tracker
-backend/setup.sh
-*.o
-backend/src/.deps/*
-backend/build/autom4te.cache/*
-backend/build/.deps/*
-backend/build/*
-!backend/build/Makefile.am
+node_modules/*
