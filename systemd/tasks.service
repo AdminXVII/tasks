@@ -4,7 +4,7 @@ After=syslog.target network.target tasks.socket
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/tasks
+ExecStart=@bindir@tasks
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 

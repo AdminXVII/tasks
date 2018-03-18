@@ -98,8 +98,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_tasks_OBJECTS = tasks-tracker.$(OBJEXT) server.$(OBJEXT) \
-	socket.$(OBJEXT) http.$(OBJEXT)
+am_tasks_OBJECTS = tasks-tracker.$(OBJEXT) socket.$(OBJEXT) \
+	http.$(OBJEXT)
 tasks_OBJECTS = $(am_tasks_OBJECTS)
 tasks_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -250,8 +250,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-tasks_SOURCES = tasks-tracker.c server.c socket.c http.c backend.h
-AM_LDFLAGS = -lssl -lcrypto -lpthread -lsystemd
+tasks_SOURCES = tasks-tracker.c socket.c http.c backend.h
+AM_LDFLAGS = -lmicrohttpd -lpthread -lsystemd
 all: all-am
 
 .SUFFIXES:
@@ -339,7 +339,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/http.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/server.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/socket.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tasks-tracker.Po@am__quote@
 

@@ -4,9 +4,13 @@ PartOf=tasks.service
 
 [Socket]
 ListenSequentialPacket=%t/tasks.sock
-ListenStream=9000
 SocketMode=0600
 DirectoryMode=0700
+ReusePort=true
+NonBlocking=true
+
+[Socket]
+ListenStream=9000
 ReusePort=true
 
 [Install]
