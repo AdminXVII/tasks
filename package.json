@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/AdminXVII/tasks#readme",
   "devDependencies": {
+    "express": "^4.16.3",
     "gulp": "^3.9.1",
     "gulp-css-purge": "^3.0.3",
     "gulp-express": "^0.3.5",
@@ -27,6 +28,7 @@
     "gulp-svgo": "^1.4.0",
     "gulp-uncache": "^0.4.0-beta1",
     "node-sass": "^4.7.2",
-    "nopt": "^4.0.1"
+    "nopt": "^4.0.1",
+    "workbox-build": "^2.1.3"
   }
 }

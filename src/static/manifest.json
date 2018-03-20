@@ -1,0 +1,31 @@
+{
+  "short_name": "Tasks",
+  "name": "(Keep track of long running) Tasks",
+  "description": "Keep track of long running Tasks",
+  "icons": [
+    {
+      "src": "logo-48x48.png",
+      "type": "image/png",
+      "sizes": "48x48"
+    },
+    {
+      "src": "logo-96x96.png",
+      "type": "image/png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "logo-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+        "src": "logo-512x512.png",
+        "type": "image/png",
+        "sizes": "512x512"
+    }
+  ],
+  "start_url": "index.html?launcher=true",
+  "background_color": "#009688",
+  "theme_color": "#009688",
+  "display": "standalone"
+}
