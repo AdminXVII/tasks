@@ -1,7 +1,6 @@
 # Tasks tracker
 
 This is an helper that keep tracks of long-running job remotely.
-<<<<<<< HEAD
 The interface listen to Server-Sent Events at a given URL which are sent by custom libraires.
 
 # Front-end
