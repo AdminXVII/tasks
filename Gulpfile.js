@@ -16,7 +16,8 @@ gulp.task('imgs', function () {
 
 gulp.task('sw', () => {
   return workboxBuild.generateSW({
-    //swSrc: 'src/sw.js',
+    skipWaiting: true,
+    clientsClaim: true,
     swDest: 'dist/sw.js',
     globDirectory: 'dist',
     globPatterns: ['**\/*.{js,css,html,png,svg,json}'],

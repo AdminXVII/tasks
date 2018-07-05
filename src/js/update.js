@@ -8,65 +8,97 @@ if ('serviceWorker' in navigator) {
 /* URL source */
 
 var url;
-var urlNode = document.getElementById("url");
+const urlNode = document.getElementById("url");
+const snackbar = document.getElementById('snackbar');
 var source;
 
-urlNode.value = (localStorage.getItem("url") || "help");
-setUrl(urlNode.value);
-urlNode.onkeydown = function(evt){
-  if(evt.keyCode == 13){
-    urlNode.blur();
-    setUrl(urlNode.value);
-  }
+window.onload = function(){
+  urlNode.value = localStorage.getItem("url");
+  setUrl(urlNode.value);
+  urlNode.parentNode.MaterialTextfield.checkDirty();
+  urlNode.onkeydown = function(evt){
+    if(evt.keyCode == 13){
+      urlNode.blur();
+      setUrl(urlNode.value);
+    }
+  };
 };
 
 function setUrl(newUrl){
-    var regex = /^(?:((?:(?:[a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}|(?:\d{1,3}\.){3}\d{1,3})))?(:\d{1,4})?((?:\/[\w%.~+-]*)*(?:\?[\w;&%.~+=-]*)?(?:#[\w-]*)?)$/i;
-    var match = newUrl.match(regex);
-    if (match !== null){
-        urlNode.setCustomValidity("");
-        url = "http://" + (match[1]? match[1] : "localhost") + (match[2]? match[2] : ":9000") + (match[3]? match[3] : "");
-        if (source) source.close();
-        source = new EventSource(url);
-        
-        source.addEventListener("new", eventNew, false);
-        source.addEventListener("msg", eventMsg, false);
-        source.addEventListener("end", eventEnd, false);
-        source.onerror = onError;
-        source.onopen = opened;
-        localStorage.setItem("url", urlNode.value);
-    } else if (newUrl == "help"){
-        // show help
-    }
+  let url = toURL(newUrl);
+  if (url === false){
+    return;
+  }
+  connect(url);
+  localStorage.setItem("url", newUrl);
 }
 
-/* Helpers */
+function toURL(url){
+  // https://regex101.com/r/IjsjtQ/1
+  const regex = /^(?:((?:(?:[a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}|(?:\d{1,3}\.){3}\d{1,3})))?(:\d{1,4})?((?:\/[\w%.~+-]*)*(?:\?[\w;&%.~+=-]*)?(?:#[\w-]*)?)$/i;
+  var match = url.match(regex);
+  if (match !== null){
+    return (match[1]? "https://" + match[1] : "http://localhost") + (match[2]? match[2] : ":9000") + (match[3]? match[3] : "");
+  }
+  return false;
+}
+
+function connect(url){
+  if (source){
+    source.close();
+    deleteAll();
+    updates = {};
+  }
+  source = new EventSource(url);
+  
+  source.addEventListener("new", eventNew, false);
+  source.addEventListener("msg", eventMsg, false);
+  source.addEventListener("end", eventEnd, false);
+  source.onerror = onError;
+  source.onopen = opened;
+}
+
+/* Data binding */
+updates = {};
+
 function removeElement(el){
     el.parentNode.removeChild(el);
 }
 
 function eventNew(e){
-  var resp = JSON.parse(e.data);
+  var resp = unpack(e);
   for (let id in resp)
     updates[id] = add(id, resp[id]);
 }
 
 function eventMsg(e){
-  var resp = JSON.parse(e.data);
+  var resp = unpack(e);
   for (let id in resp)
     update(updates[id], resp[id]);
 }
 
 function eventEnd(e){
-  var resp = JSON.parse(e.data);
+  var resp = unpack(e);
   for (let id in resp){
     end(updates[id]);
     delete updates[id];
   }
 }
 
+function unpack(e){
+  try {
+    return JSON.parse(e.data);
+  }
+  catch(err){
+    console.log("Error unpacking JSON: ", e.data, err);
+  }
+}
+
 function onError(e) {
-  alert("There was a problem with communication");
+  snackbar.MaterialSnackbar.showSnackbar({
+    message: 'Error: failed to connect to remote host.',
+    timeout: 2000
+  });
   console.log(e);
   source.close();
 }
@@ -74,27 +106,20 @@ function onError(e) {
 function opened(e){
 }
 
-/* Debugging */
-
-function random(len){
-  var text = "";
-  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-  for (var i = 0; i < len; i++)
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-
-  return text;
-}
-
 /* Main logic*/
 
-const main = document.getElementById('updates');
+var main = document.getElementById('updates');
 const template = document.getElementById('update-template').content;
 const closeTemplate = document.getElementById('close-template').content;
 
-updates = {};
-
 /* Direct node manipulation*/
+
+function deleteAll(){
+  let oldMain = main;
+  main = oldMain.cloneNode(false);
+  oldMain.parentNode.replaceChild(main, oldMain);
+  console.log(main.parentNode);
+}
 
 function add(id, name){
   var node = document.importNode(template, true);
@@ -110,14 +135,20 @@ function add(id, name){
 }
 
 function rename(node, name) {
+  if (node === undefined) return;
+  
   node.title.textContent = name;
 }
 
 function update(node, text) {
+  if (node === undefined) return;
+  
   node.text.textContent = text;
 }
 
 function end(node) {
+  if (node === undefined) return;
+  
   var closeButton = document.importNode(closeTemplate, true);
   closeButton.querySelector("button").onclick = function(){removeElement(node.node);};
   node.node.appendChild(closeButton);

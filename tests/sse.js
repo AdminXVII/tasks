@@ -11,6 +11,10 @@ module.exports = function (req, res, next) {
   res.sseSend = function(event, data) {
     res.write(`event:${event}\ndata: ${JSON.stringify(data)}\n\n`);
   };
+  
+  res.sseClose = function(){
+    res.end();
+  };
 
   next();
 };

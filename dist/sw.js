@@ -36,15 +36,15 @@ const fileManifest = [
   },
   {
     "url": "index.html",
-    "revision": "bdca714d435c1f2f38b79590f653cc56"
+    "revision": "fcc1e24d67761f2e62128237bd1518da"
   },
   {
     "url": "js/update.js",
-    "revision": "7a9519aff8dd2c7ee4973791ced7bd50"
+    "revision": "eb8644e73d6c270c47b9147304a2e366"
   },
   {
     "url": "logo-16x16.png",
-    "revision": "6ac0b11ace0003ed0a0a4f2e8779f322"
+    "revision": "d41d8cd98f00b204e9800998ecf8427e"
   },
   {
     "url": "logo-192x192.png",
@@ -73,10 +73,17 @@ const fileManifest = [
   {
     "url": "manifest.json",
     "revision": "e530efe9b8ab1dc6bff5f04d343ba3bd"
+  },
+  {
+    "url": "update.js",
+    "revision": "3ba734b6da10c634e36c2d5b292c2904"
   }
 ];
 
-const workboxSW = new self.WorkboxSW();
+const workboxSW = new self.WorkboxSW({
+  "skipWaiting": true,
+  "clientsClaim": true
+});
 workboxSW.precache(fileManifest);
 workboxSW.router.registerRoute(/^https:\/\/code\.getmdl\.io/, workboxSW.strategies.staleWhileRevalidate({}), 'GET');
 workboxSW.router.registerRoute(/^https:\/\/fonts\.googleapis\.com/, workboxSW.strategies.staleWhileRevalidate({}), 'GET');

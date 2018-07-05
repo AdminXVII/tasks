@@ -1,3 +1,15 @@
 .sass-cache
 *.css.map
+<<<<<<< HEAD
 node_modules/*
+=======
+backend/tasks-tracker
+backend/setup.sh
+*.o
+backend/src/.deps/*
+backend/build/autom4te.cache/*
+backend/build/.deps/*
+backend/build/*
+!backend/build/Makefile.am
+node_modules/
+>>>>>>> 51276957258a519a31f3fce2f5003265e4cc6403

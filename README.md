@@ -5,6 +5,7 @@ The interface listen to Server-Sent Events at a given URL which are sent by cust
 
 # Front-end
 This is the front end website. Look at chezxavier.ga/tasks for publicly available front end. You can also download the dist folder for a static version (no backend is required, but you may have some problems with CORS)
+<<<<<<< HEAD
 
 # Backend
 See github.com/AdminXVII/tasks for the main utility
@@ -48,3 +49,8 @@ Events are provided as sequential packets through a UNIX socket (by default it i
 # Implementation restrictions
  - The name is truncated after 100 characters
  - Messages are truncated after 1000 characters
+=======
+
+# Backend
+See github.com/tasks for the main utility
+>>>>>>> 51276957258a519a31f3fce2f5003265e4cc6403
